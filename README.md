@@ -1,5 +1,12 @@
 # agent-greenroom
 
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Rust](https://img.shields.io/badge/Rust-1.80+-000000?logo=rust&logoColor=white)](https://www.rust-lang.org)
+[![MCP](https://img.shields.io/badge/MCP-Enabled-orange.svg)](https://modelcontextprotocol.io)
+[![Spec-Driven](https://img.shields.io/badge/Spec--Driven-Development-8B5CF6.svg)](spec/SPEC.md)
+[![GitHub Release](https://img.shields.io/github/v/release/vladNed/agent-greenroom?include_prereleases)](https://github.com/vladNed/agent-greenroom/releases)
+[![Tests](https://img.shields.io/github/actions/workflow/status/vladNed/agent-greenroom/test.yml?label=tests)](https://github.com/vladNed/agent-greenroom/actions)
+
 Modern AI workflows increasingly involve more than one model. You might want Claude Code and Codex working the same codebase simultaneously — one reviewing while the other refactors. Or a DeepSeek-backed coding agent paired with a Claude Sonnet reasoning agent, where one generates candidates and the other critiques them. Or a GPT-4o orchestrator dispatching sub-tasks to specialised agents and collecting their outputs.
 
 The problem is that agents run in separate processes, often with different tool sets, and have no natural way to talk to each other. File-based handoffs are fragile. Shared databases are heavyweight. Polling loops are noisy.
