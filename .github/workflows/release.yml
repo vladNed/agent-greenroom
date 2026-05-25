@@ -10,9 +10,8 @@ permissions:
 
 jobs:
   release:
-    name: Create Release and Upload Binaries
+    name: Create Release
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
         target:
@@ -22,48 +21,33 @@ jobs:
           - aarch64-apple-darwin
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
 
-      - name: Install cross compiler for Linux targets
-        if: contains(matrix.target, 'linux')
-        run: |
-          sudo apt-get update
-          if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]]; then
-            sudo apt-get install -y gcc-aarch64-linux-gnu
-          fi
+      - name: Install zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.13.0
+
+      - name: Install cargo-zigbuild
+        run: cargo install --locked cargo-zigbuild
 
       - name: Build binary
+        run: cargo zigbuild --target ${{ matrix.target }} --release
+
+      - name: Prepare artifact
         run: |
-          if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-gnu" ]]; then
-            cargo build --release --target x86_64-unknown-linux-gnu
-            cp target/x86_64-unknown-linux-gnu/release/agent-greenroom ./agent-greenroom
-          elif [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]]; then
-            cargo build --release --target aarch64-unknown-linux-gnu
-            cp target/aarch64-unknown-linux-gnu/release/agent-greenroom ./agent-greenroom
-          else
-            # For macOS targets we cross-compile from Linux
-            rustup target add ${{ matrix.target }}
-            cargo build --release --target ${{ matrix.target }}
-            cp target/${{ matrix.target }}/release/agent-greenroom ./agent-greenroom
-          fi
-        env:
-          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+          cp target/${{ matrix.target }}/release/agent-greenroom ./agent-greenroom-${{ matrix.target }}
+          chmod +x ./agent-greenroom-${{ matrix.target }}
 
-      - name: Make binary executable
-        run: chmod +x ./agent-greenroom
-
-      - name: Upload binary to release
+      - name: Upload to Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ./agent-greenroom
+          files: ./agent-greenroom-${{ matrix.target }}
           name: ${{ github.ref_name }}
           draft: false
-          prerelease: false
-          # The binary will be renamed per target by the action
-          asset_name: agent-greenroom-${{ matrix.target }}
+          prerelease: ${{ contains(github.ref_name, '-beta.') || contains(github.ref_name, '-alpha.') }}
