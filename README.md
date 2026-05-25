@@ -67,3 +67,7 @@ async with streamablehttp_client("http://127.0.0.1:7878/mcp") as (r, w, _):
 ---
 
 Apache License 2.0
+
+## Contributing
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting any Pull Requests. This project follows **Spec-Driven Development** — all changes must be preceded by updates to the specification.
