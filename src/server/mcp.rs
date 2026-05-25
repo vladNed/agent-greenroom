@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 use crate::registry::{ChannelError, Registry};
 
-use super::params::{ChannelEndpointParams, SendParams};
+use super::params::{ChannelEndpointParams, ChannelJoinParams, SendParams};
 
 pub struct ChannelsServer {
     pub registry: Arc<Registry>,
@@ -21,13 +21,16 @@ impl ChannelsServer {
     }
 }
 
+fn parse_channel_id(s: &str) -> Result<Uuid, ErrorData> {
+    s.parse::<Uuid>()
+        .map_err(|_| ChannelError::InvalidChannelId.to_mcp_error())
+}
+
 fn parse_ids(channel_str: &str, endpoint_str: &str) -> Result<(Uuid, Uuid), ErrorData> {
-    let channel_id = channel_str
-        .parse::<Uuid>()
-        .map_err(|_| ChannelError::InvalidChannelId.to_mcp_error())?;
+    let channel_id = parse_channel_id(channel_str)?;
     let endpoint_id = endpoint_str
         .parse::<Uuid>()
-        .map_err(|_| ChannelError::InvalidEndpoint.to_mcp_error())?;
+        .map_err(|_| ChannelError::InvalidEndpointId.to_mcp_error())?;
     Ok((channel_id, endpoint_id))
 }
 
@@ -39,6 +42,21 @@ impl ChannelsServer {
     async fn channels_create(&self) -> Result<String, ErrorData> {
         let (channel_id, endpoint_id) = self.registry.create(self.buffer_size);
         Ok(serde_json::json!({ "channel_id": channel_id, "endpoint_id": endpoint_id }).to_string())
+    }
+
+    #[tool(
+        description = "Join an existing channel; returns { \"endpoint_id\": \"<uuid>\" }"
+    )]
+    async fn channels_join(
+        &self,
+        Parameters(ChannelJoinParams { channel_id }): Parameters<ChannelJoinParams>,
+    ) -> Result<String, ErrorData> {
+        let channel_id = parse_channel_id(&channel_id)?;
+        let endpoint_id = self
+            .registry
+            .join(channel_id)
+            .map_err(ChannelError::to_mcp_error)?;
+        Ok(serde_json::json!({ "endpoint_id": endpoint_id }).to_string())
     }
 
     #[tool(description = "Send a JSON message to a channel; returns { \"ok\": true }")]
@@ -100,12 +118,9 @@ impl ChannelsServer {
     #[tool(description = "Close a channel; returns { \"ok\": true }")]
     async fn channels_close(
         &self,
-        Parameters(ChannelEndpointParams {
-            channel_id,
-            endpoint_id,
-        }): Parameters<ChannelEndpointParams>,
+        Parameters(ChannelJoinParams { channel_id }): Parameters<ChannelJoinParams>,
     ) -> Result<String, ErrorData> {
-        let (channel_id, _) = parse_ids(&channel_id, &endpoint_id)?;
+        let channel_id = parse_channel_id(&channel_id)?;
         self.registry
             .close(channel_id)
             .map_err(ChannelError::to_mcp_error)?;

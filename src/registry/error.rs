@@ -10,8 +10,12 @@ pub enum ChannelError {
     RecvAlreadyInFlight,
     #[error("invalid channel id")]
     InvalidChannelId,
-    #[error("invalid endpoint")]
-    InvalidEndpoint,
+    #[error("invalid endpoint id")]
+    InvalidEndpointId,
+    #[error("endpoint not found")]
+    EndpointNotFound,
+    #[error("channel full")]
+    ChannelFull,
 }
 
 impl ChannelError {

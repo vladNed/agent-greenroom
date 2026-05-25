@@ -14,18 +14,9 @@ pub struct Mailbox {
     rx: ReceiverSlot,
 }
 
-impl Mailbox {
-    pub fn new(buffer: usize) -> Self {
-        let (tx, rx) = mpsc::channel(buffer);
-        Mailbox {
-            tx,
-            rx: Arc::new(Mutex::new(Some(rx))),
-        }
-    }
-}
-
 pub struct Channel {
     mailboxes: HashMap<Uuid, Mailbox>,
+    available: Option<Uuid>,
 }
 
 impl Channel {
@@ -33,27 +24,51 @@ impl Channel {
         let endpoint1 = Uuid::new_v4();
         let endpoint2 = Uuid::new_v4();
 
-        let mailbox_1 = Mailbox::new(buffer);
-        let mailbox_2 = Mailbox::new(buffer);
+        // Cross-wire: each endpoint's tx delivers into the peer's rx so an
+        // agent cannot read back its own messages.
+        let (tx_1to2, rx_1to2) = mpsc::channel(buffer);
+        let (tx_2to1, rx_2to1) = mpsc::channel(buffer);
 
         let mut mailboxes = HashMap::new();
-        mailboxes.insert(endpoint1, mailbox_1);
-        mailboxes.insert(endpoint2, mailbox_2);
+        mailboxes.insert(
+            endpoint1,
+            Mailbox {
+                tx: tx_1to2,
+                rx: Arc::new(Mutex::new(Some(rx_2to1))),
+            },
+        );
+        mailboxes.insert(
+            endpoint2,
+            Mailbox {
+                tx: tx_2to1,
+                rx: Arc::new(Mutex::new(Some(rx_1to2))),
+            },
+        );
 
-        (Channel { mailboxes }, endpoint1)
+        (
+            Channel {
+                mailboxes,
+                available: Some(endpoint2),
+            },
+            endpoint1,
+        )
+    }
+
+    pub(crate) fn join(&mut self) -> Result<Uuid, ChannelError> {
+        self.available.take().ok_or(ChannelError::ChannelFull)
     }
 
     pub(crate) fn sender_for(&self, endpoint: Uuid) -> Result<Sender, ChannelError> {
         self.mailboxes
             .get(&endpoint)
             .map(|m| m.tx.clone())
-            .ok_or(ChannelError::InvalidEndpoint)
+            .ok_or(ChannelError::EndpointNotFound)
     }
 
     pub(crate) fn receiver_slot_for(&self, endpoint: Uuid) -> Result<ReceiverSlot, ChannelError> {
         self.mailboxes
             .get(&endpoint)
             .map(|m| m.rx.clone())
-            .ok_or(ChannelError::InvalidEndpoint)
+            .ok_or(ChannelError::EndpointNotFound)
     }
 }

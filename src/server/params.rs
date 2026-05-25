@@ -14,3 +14,8 @@ pub struct ChannelEndpointParams {
     pub channel_id: String,
     pub endpoint_id: String,
 }
+
+#[derive(Deserialize, schemars::JsonSchema)]
+pub struct ChannelJoinParams {
+    pub channel_id: String,
+}
