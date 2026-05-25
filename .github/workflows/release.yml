@@ -9,8 +9,8 @@ permissions:
   contents: write
 
 jobs:
-  release:
-    name: Create Release and Upload Assets
+  binaries:
+    name: Build and Upload Binary (${{ matrix.target }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -48,6 +48,24 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: ./agent-greenroom-${{ matrix.target }}
+          name: ${{ github.ref_name }}
+          draft: true
+          prerelease: ${{ contains(github.ref_name, '-beta.') || contains(github.ref_name, '-alpha.') }}
+          fail_on_unmatched_files: true
+
+  skills:
+    name: Upload Skill Files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Upload skills to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            skills/agent-greenroom.md
+            skills/agent-greenroom-opencode.md
+            skills/agent-greenroom-codex.md
           name: ${{ github.ref_name }}
           draft: true
           prerelease: ${{ contains(github.ref_name, '-beta.') || contains(github.ref_name, '-alpha.') }}
