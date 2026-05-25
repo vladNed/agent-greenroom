@@ -16,6 +16,8 @@ pub enum ChannelError {
     EndpointNotFound,
     #[error("channel full")]
     ChannelFull,
+    #[error("peer has not joined yet")]
+    PeerNotYetJoined,
 }
 
 impl ChannelError {

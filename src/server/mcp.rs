@@ -3,9 +3,11 @@ use std::sync::Arc;
 use rmcp::{ErrorData, handler::server::wrapper::Parameters, tool, tool_router};
 use uuid::Uuid;
 
-use crate::registry::{ChannelError, Registry};
+use crate::registry::{AgentIdentity, ChannelError, Registry};
 
-use super::params::{ChannelEndpointParams, ChannelJoinParams, SendParams};
+use super::params::{
+    ChannelCloseParams, ChannelCreateParams, ChannelEndpointParams, ChannelJoinParams, SendParams,
+};
 
 pub struct ChannelsServer {
     pub registry: Arc<Registry>,
@@ -39,24 +41,37 @@ impl ChannelsServer {
     #[tool(
         description = "Create a new channel; returns { \"channel_id\": \"<uuid>\", \"endpoint_id\": \"<uuid>\" }"
     )]
-    async fn channels_create(&self) -> Result<String, ErrorData> {
-        let (channel_id, endpoint_id) = self.registry.create(self.buffer_size);
+    async fn channels_create(
+        &self,
+        Parameters(ChannelCreateParams { name, model }): Parameters<ChannelCreateParams>,
+    ) -> Result<String, ErrorData> {
+        let identity = AgentIdentity { name, model };
+        let (channel_id, endpoint_id) = self.registry.create(self.buffer_size, identity);
         Ok(serde_json::json!({ "channel_id": channel_id, "endpoint_id": endpoint_id }).to_string())
     }
 
     #[tool(
-        description = "Join an existing channel; returns { \"endpoint_id\": \"<uuid>\" }"
+        description = "Join an existing channel; returns { \"endpoint_id\": \"<uuid>\", \"peer\": { \"name\": \"...\", \"model\": \"...\" } }"
     )]
     async fn channels_join(
         &self,
-        Parameters(ChannelJoinParams { channel_id }): Parameters<ChannelJoinParams>,
+        Parameters(ChannelJoinParams {
+            channel_id,
+            name,
+            model,
+        }): Parameters<ChannelJoinParams>,
     ) -> Result<String, ErrorData> {
         let channel_id = parse_channel_id(&channel_id)?;
-        let endpoint_id = self
+        let identity = AgentIdentity { name, model };
+        let (endpoint_id, peer) = self
             .registry
-            .join(channel_id)
+            .join(channel_id, identity)
             .map_err(ChannelError::to_mcp_error)?;
-        Ok(serde_json::json!({ "endpoint_id": endpoint_id }).to_string())
+        Ok(serde_json::json!({
+            "endpoint_id": endpoint_id,
+            "peer": { "name": peer.name, "model": peer.model }
+        })
+        .to_string())
     }
 
     #[tool(description = "Send a JSON message to a channel; returns { \"ok\": true }")]
@@ -115,10 +130,28 @@ impl ChannelsServer {
         }
     }
 
+    #[tool(
+        description = "Query the peer's identity for your endpoint; returns { \"peer\": { \"name\": \"...\", \"model\": \"...\" } } or an error if the peer has not joined yet"
+    )]
+    async fn channels_peer(
+        &self,
+        Parameters(ChannelEndpointParams {
+            channel_id,
+            endpoint_id,
+        }): Parameters<ChannelEndpointParams>,
+    ) -> Result<String, ErrorData> {
+        let (channel_id, endpoint_id) = parse_ids(&channel_id, &endpoint_id)?;
+        let peer = self
+            .registry
+            .peer_identity_for(channel_id, endpoint_id)
+            .map_err(ChannelError::to_mcp_error)?;
+        Ok(serde_json::json!({ "peer": { "name": peer.name, "model": peer.model } }).to_string())
+    }
+
     #[tool(description = "Close a channel; returns { \"ok\": true }")]
     async fn channels_close(
         &self,
-        Parameters(ChannelJoinParams { channel_id }): Parameters<ChannelJoinParams>,
+        Parameters(ChannelCloseParams { channel_id }): Parameters<ChannelCloseParams>,
     ) -> Result<String, ErrorData> {
         let channel_id = parse_channel_id(&channel_id)?;
         self.registry

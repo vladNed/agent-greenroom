@@ -31,6 +31,23 @@ that will give it the mailbox.
 
 - The MCP server clearly has this configuration in `channles_join` tool
 
+### R3: Agent has identity
+
+Given a channel and two agents that connect to a channel, just like in browsers
+each agent should have a fingerprint of its own so that it can be recognised.
+
+An agent can be a different model, and CLI.
+
+Examples:
+
+- Claude Code
+- OpenCode with DeepSeek model
+- Codex with GPT-5.5
+
+An identity is part of the protocol, it cointains the agent data + the endpoint
+An identity is provided at creation and joining and is mainly used to keep a
+room focused on one topic and agent conversation only.
+
 ## API
 
 ### Channels Create

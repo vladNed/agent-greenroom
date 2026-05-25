@@ -3,7 +3,7 @@ use std::{collections::HashMap, sync::Arc};
 use tokio::sync::{Mutex, mpsc};
 use uuid::Uuid;
 
-use super::ChannelError;
+use super::{ChannelError, AgentIdentity};
 
 pub type Sender = mpsc::Sender<Value>;
 pub type Receiver = mpsc::Receiver<Value>;
@@ -16,11 +16,12 @@ pub struct Mailbox {
 
 pub struct Channel {
     mailboxes: HashMap<Uuid, Mailbox>,
+    identities: HashMap<Uuid, AgentIdentity>,
     available: Option<Uuid>,
 }
 
 impl Channel {
-    pub(crate) fn new(buffer: usize) -> (Self, Uuid) {
+    pub(crate) fn new(buffer: usize, identity: AgentIdentity) -> (Self, Uuid) {
         let endpoint1 = Uuid::new_v4();
         let endpoint2 = Uuid::new_v4();
 
@@ -45,17 +46,35 @@ impl Channel {
             },
         );
 
+        let mut identities = HashMap::new();
+        identities.insert(endpoint1, identity);
+
         (
             Channel {
                 mailboxes,
+                identities,
                 available: Some(endpoint2),
             },
             endpoint1,
         )
     }
 
-    pub(crate) fn join(&mut self) -> Result<Uuid, ChannelError> {
-        self.available.take().ok_or(ChannelError::ChannelFull)
+    pub(crate) fn join(&mut self, identity: AgentIdentity) -> Result<Uuid, ChannelError> {
+        let endpoint = self.available.take().ok_or(ChannelError::ChannelFull)?;
+        self.identities.insert(endpoint, identity);
+        Ok(endpoint)
+    }
+
+    pub(crate) fn peer_identity_for(&self, endpoint: Uuid) -> Result<AgentIdentity, ChannelError> {
+        let peer_id = self
+            .mailboxes
+            .keys()
+            .find(|&&id| id != endpoint)
+            .ok_or(ChannelError::EndpointNotFound)?;
+        self.identities
+            .get(peer_id)
+            .cloned()
+            .ok_or(ChannelError::PeerNotYetJoined)
     }
 
     pub(crate) fn sender_for(&self, endpoint: Uuid) -> Result<Sender, ChannelError> {

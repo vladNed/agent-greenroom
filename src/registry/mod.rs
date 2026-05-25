@@ -1,7 +1,9 @@
 mod channel;
 mod error;
+mod identity;
 
 pub use error::ChannelError;
+pub use identity::AgentIdentity;
 
 use std::{collections::HashMap, sync::Mutex};
 
@@ -26,9 +28,9 @@ impl Registry {
         }
     }
 
-    pub fn create(&self, buffer: usize) -> (Uuid, Uuid) {
+    pub fn create(&self, buffer: usize, identity: AgentIdentity) -> (Uuid, Uuid) {
         let channel_id = Uuid::new_v4();
-        let (channel, endpoint_id) = Channel::new(buffer);
+        let (channel, endpoint_id) = Channel::new(buffer, identity);
         self.channels.lock().expect("registry lock poisoned").insert(channel_id, channel);
         (channel_id, endpoint_id)
     }
@@ -53,12 +55,22 @@ impl Registry {
         channel.receiver_slot_for(endpoint)
     }
 
-    pub fn join(&self, channel_id: Uuid) -> Result<Uuid, ChannelError> {
+    pub fn join(&self, channel_id: Uuid, identity: AgentIdentity) -> Result<(Uuid, AgentIdentity), ChannelError> {
         let mut channels = self.channels.lock().expect("registry lock poisoned");
         let channel = channels
             .get_mut(&channel_id)
             .ok_or(ChannelError::ChannelNotFound)?;
-        channel.join()
+        let endpoint_id = channel.join(identity)?;
+        let peer_identity = channel.peer_identity_for(endpoint_id)?;
+        Ok((endpoint_id, peer_identity))
+    }
+
+    pub fn peer_identity_for(&self, channel_id: Uuid, endpoint: Uuid) -> Result<AgentIdentity, ChannelError> {
+        let channels = self.channels.lock().expect("registry lock poisoned");
+        let channel = channels
+            .get(&channel_id)
+            .ok_or(ChannelError::ChannelNotFound)?;
+        channel.peer_identity_for(endpoint)
     }
 
     pub fn close(&self, id: Uuid) -> Result<(), ChannelError> {
@@ -81,6 +93,10 @@ mod tests {
     use super::*;
     use crate::registry::ChannelError;
 
+    fn stub(name: &str) -> AgentIdentity {
+        AgentIdentity { name: name.to_string(), model: "test-model".to_string() }
+    }
+
     #[tokio::test]
     async fn test_send_unknown_channel() {
         let reg = Registry::new();
@@ -94,9 +110,9 @@ mod tests {
     #[tokio::test]
     async fn test_join_success() {
         let reg = Registry::new();
-        let (id, ep1) = reg.create(1024);
+        let (id, ep1) = reg.create(1024, stub("creator"));
 
-        let ep2 = reg.join(id).unwrap();
+        let (ep2, _peer) = reg.join(id, stub("joiner")).unwrap();
 
         assert_ne!(ep1, ep2);
         assert!(reg.sender_for(id, ep2).is_ok());
@@ -108,7 +124,7 @@ mod tests {
         let fake = Uuid::new_v4();
 
         assert!(matches!(
-            reg.join(fake),
+            reg.join(fake, stub("a")),
             Err(ChannelError::ChannelNotFound)
         ));
     }
@@ -116,18 +132,18 @@ mod tests {
     #[tokio::test]
     async fn test_join_twice_fails() {
         let reg = Registry::new();
-        let (id, _) = reg.create(1024);
+        let (id, _) = reg.create(1024, stub("creator"));
 
-        let _ep2 = reg.join(id).unwrap();
-        assert!(matches!(reg.join(id), Err(ChannelError::ChannelFull)));
+        let _ = reg.join(id, stub("joiner")).unwrap();
+        assert!(matches!(reg.join(id, stub("late")), Err(ChannelError::ChannelFull)));
     }
 
     #[tokio::test]
     async fn test_join_endpoints_independent() {
         let reg = Registry::new();
-        let (id, ep1) = reg.create(2);
+        let (id, ep1) = reg.create(2, stub("creator"));
 
-        let ep2 = reg.join(id).unwrap();
+        let (ep2, _) = reg.join(id, stub("joiner")).unwrap();
 
         let tx1 = reg.sender_for(id, ep1).unwrap();
         let tx2 = reg.sender_for(id, ep2).unwrap();
@@ -148,7 +164,7 @@ mod tests {
     #[tokio::test]
     async fn test_recv_already_in_flight() {
         let reg = Registry::new();
-        let (id, ep) = reg.create(1024);
+        let (id, ep) = reg.create(1024, stub("creator"));
         let slot = reg.receiver_slot_for(id, ep).unwrap();
 
         let _rx = slot.lock().await.take().unwrap();
@@ -159,7 +175,7 @@ mod tests {
     #[tokio::test]
     async fn test_close_unblocks_parked_recv() {
         let reg = Arc::new(Registry::new());
-        let (id, ep) = reg.create(1024);
+        let (id, ep) = reg.create(1024, stub("creator"));
         let slot = reg.receiver_slot_for(id, ep).unwrap();
 
         let mut guard = slot.lock().await;
@@ -178,7 +194,7 @@ mod tests {
     #[tokio::test]
     async fn test_buffer_full() {
         let reg = Registry::new();
-        let (id, ep) = reg.create(2);
+        let (id, ep) = reg.create(2, stub("creator"));
         let sender = reg.sender_for(id, ep).unwrap();
 
         sender.try_send(json!(1)).unwrap();
@@ -191,5 +207,33 @@ mod tests {
             ),
             "expected TrySendError::Full on a full buffer"
         );
+    }
+
+    #[tokio::test]
+    async fn test_create_and_peer_identity() {
+        let reg = Registry::new();
+        let creator = AgentIdentity { name: "Claude Code".to_string(), model: "claude-sonnet-4-6".to_string() };
+        let joiner = AgentIdentity { name: "OpenCode".to_string(), model: "deepseek-chat".to_string() };
+
+        let (id, ep1) = reg.create(1024, creator);
+        let (ep2, peer_seen_by_joiner) = reg.join(id, joiner).unwrap();
+
+        assert_eq!(peer_seen_by_joiner.name, "Claude Code");
+
+        let peer_seen_by_creator = reg.peer_identity_for(id, ep1).unwrap();
+        assert_eq!(peer_seen_by_creator.name, "OpenCode");
+
+        assert_ne!(ep1, ep2);
+    }
+
+    #[tokio::test]
+    async fn test_peer_not_yet_joined() {
+        let reg = Registry::new();
+        let (id, ep1) = reg.create(1024, stub("creator"));
+
+        assert!(matches!(
+            reg.peer_identity_for(id, ep1),
+            Err(ChannelError::PeerNotYetJoined)
+        ));
     }
 }
