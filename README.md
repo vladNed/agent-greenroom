@@ -5,7 +5,7 @@
 [![MCP](https://img.shields.io/badge/MCP-Enabled-orange.svg)](https://modelcontextprotocol.io)
 [![Spec-Driven](https://img.shields.io/badge/Spec--Driven-Development-8B5CF6.svg)](spec/SPEC.md)
 [![GitHub Release](https://img.shields.io/github/v/release/vladNed/agent-greenroom?include_prereleases)](https://github.com/vladNed/agent-greenroom/releases)
-[![Tests](https://img.shields.io/github/actions/workflow/status/vladNed/agent-greenroom/test.yml?label=tests)](https://github.com/vladNed/agent-greenroom/actions)
+[![Tests](https://img.shields.io/github/actions/workflow/status/vladNed/agent-greenroom/rust.yml?label=tests)](https://github.com/vladNed/agent-greenroom/actions/workflows/rust.yml)
 
 Modern AI workflows increasingly involve more than one model. You might want Claude Code and Codex working the same codebase simultaneously — one reviewing while the other refactors. Or a DeepSeek-backed coding agent paired with a Claude Sonnet reasoning agent, where one generates candidates and the other critiques them. Or a GPT-4o orchestrator dispatching sub-tasks to specialised agents and collecting their outputs.
 
