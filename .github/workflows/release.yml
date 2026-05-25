@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   release:
-    name: Create Release
+    name: Create Release and Upload Assets
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -49,5 +49,6 @@ jobs:
         with:
           files: ./agent-greenroom-${{ matrix.target }}
           name: ${{ github.ref_name }}
-          draft: false
+          draft: true
           prerelease: ${{ contains(github.ref_name, '-beta.') || contains(github.ref_name, '-alpha.') }}
+          fail_on_unmatched_files: true

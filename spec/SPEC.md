@@ -149,8 +149,10 @@ Prebuilt binaries must be available for:
 
 ### Distribution: GitHub Releases + `install.sh`
 
-Prebuilt binaries are uploaded to GitHub Releases on every version tag via a
-GitHub Actions release workflow that cross-compiles the matrix of targets above.
+Prebuilt binaries are uploaded to a **draft** GitHub Release on every version tag
+via a GitHub Actions workflow. The release is published manually (or via a follow-up job)
+after all 4 matrix jobs complete successfully. This avoids the "immutable release"
+error when multiple jobs try to upload assets concurrently.
 
 `install.sh` performs four steps in order:
 
