@@ -66,4 +66,4 @@ async with streamablehttp_client("http://127.0.0.1:7878/mcp") as (r, w, _):
 
 ---
 
-MIT
+Apache License 2.0
