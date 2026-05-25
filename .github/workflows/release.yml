@@ -42,15 +42,15 @@ jobs:
         run: |
           if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-gnu" ]]; then
             cargo build --release --target x86_64-unknown-linux-gnu
-            cp target/x86_64-unknown-linux-gnu/release/channels-red ./agent-greenroom
+            cp target/x86_64-unknown-linux-gnu/release/agent-greenroom ./agent-greenroom
           elif [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]]; then
             cargo build --release --target aarch64-unknown-linux-gnu
-            cp target/aarch64-unknown-linux-gnu/release/channels-red ./agent-greenroom
+            cp target/aarch64-unknown-linux-gnu/release/agent-greenroom ./agent-greenroom
           else
             # For macOS targets we cross-compile from Linux
             rustup target add ${{ matrix.target }}
             cargo build --release --target ${{ matrix.target }}
-            cp target/${{ matrix.target }}/release/channels-red ./agent-greenroom
+            cp target/${{ matrix.target }}/release/agent-greenroom ./agent-greenroom
           fi
         env:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
