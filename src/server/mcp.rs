@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::time::Duration;
 
 use rmcp::{ErrorData, handler::server::wrapper::Parameters, tool, tool_router};
 use uuid::Uuid;
@@ -6,8 +7,12 @@ use uuid::Uuid;
 use crate::registry::{AgentIdentity, ChannelError, Registry};
 
 use super::params::{
-    ChannelCloseParams, ChannelCreateParams, ChannelEndpointParams, ChannelJoinParams, SendParams,
+    ChannelCloseParams, ChannelCreateParams, ChannelEndpointParams, ChannelJoinParams, RecvParams,
+    SendParams,
 };
+
+const DEFAULT_RECV_WAIT_MS: u64 = 50_000;
+const MAX_RECV_WAIT_MS: u64 = 600_000;
 
 pub struct ChannelsServer {
     pub registry: Arc<Registry>,
@@ -100,14 +105,15 @@ impl ChannelsServer {
     }
 
     #[tool(
-        description = "Receive a message from a channel using your endpoint; blocks until a message arrives or the channel is closed. Returns { \"message\": <json> } or { \"closed\": true }"
+        description = "Receive a message from a channel using your endpoint; long-polls up to wait_ms (default 50000, max 600000). Returns { \"message\": <json> }, { \"closed\": true }, or { \"timed_out\": true } — re-call on timed_out to keep waiting. Cancel-safe: if the call is aborted, the receiver is not lost."
     )]
     async fn channels_recv(
         &self,
-        Parameters(ChannelEndpointParams {
+        Parameters(RecvParams {
             channel_id,
             endpoint_id,
-        }): Parameters<ChannelEndpointParams>,
+            wait_ms,
+        }): Parameters<RecvParams>,
     ) -> Result<String, ErrorData> {
         let (channel_id, endpoint_id) = parse_ids(&channel_id, &endpoint_id)?;
         let slot = self
@@ -115,18 +121,18 @@ impl ChannelsServer {
             .receiver_slot_for(channel_id, endpoint_id)
             .map_err(ChannelError::to_mcp_error)?;
 
-        let mut guard = slot.lock().await;
-        let mut rx = guard
-            .take()
-            .ok_or_else(|| ChannelError::RecvAlreadyInFlight.to_mcp_error())?;
-        drop(guard);
+        let mut guard = slot
+            .try_lock()
+            .map_err(|_| ChannelError::RecvAlreadyInFlight.to_mcp_error())?;
 
-        match rx.recv().await {
-            Some(v) => {
-                *slot.lock().await = Some(rx);
-                Ok(serde_json::json!({ "message": v }).to_string())
-            }
-            None => Ok(serde_json::json!({ "closed": true }).to_string()),
+        let wait = wait_ms
+            .unwrap_or(DEFAULT_RECV_WAIT_MS)
+            .min(MAX_RECV_WAIT_MS);
+
+        match tokio::time::timeout(Duration::from_millis(wait), guard.recv()).await {
+            Ok(Some(v)) => Ok(serde_json::json!({ "message": v }).to_string()),
+            Ok(None) => Ok(serde_json::json!({ "closed": true }).to_string()),
+            Err(_) => Ok(serde_json::json!({ "timed_out": true }).to_string()),
         }
     }
 

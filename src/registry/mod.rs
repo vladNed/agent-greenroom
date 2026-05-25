@@ -153,23 +153,52 @@ mod tests {
 
         // Each endpoint reads what the OTHER sent, not its own message.
         let slot1 = reg.receiver_slot_for(id, ep1).unwrap();
-        let mut rx1 = slot1.lock().await.take().unwrap();
-        assert_eq!(rx1.recv().await, Some(json!("from_b")));
+        assert_eq!(slot1.lock().await.recv().await, Some(json!("from_b")));
 
         let slot2 = reg.receiver_slot_for(id, ep2).unwrap();
-        let mut rx2 = slot2.lock().await.take().unwrap();
-        assert_eq!(rx2.recv().await, Some(json!("from_a")));
+        assert_eq!(slot2.lock().await.recv().await, Some(json!("from_a")));
     }
 
     #[tokio::test]
-    async fn test_recv_already_in_flight() {
+    async fn test_recv_in_flight_detected_via_try_lock() {
         let reg = Registry::new();
         let (id, ep) = reg.create(1024, stub("creator"));
         let slot = reg.receiver_slot_for(id, ep).unwrap();
 
-        let _rx = slot.lock().await.take().unwrap();
+        let _guard = slot.lock().await;
 
-        assert!(slot.lock().await.take().is_none());
+        assert!(slot.try_lock().is_err());
+    }
+
+    #[tokio::test]
+    async fn test_recv_cancel_safe() {
+        // Aborting an in-flight recv must not lose the receiver: a subsequent
+        // recv on the same slot must succeed.
+        let reg = Arc::new(Registry::new());
+        let (id, ep1) = reg.create(1024, stub("creator"));
+        let (ep2, _) = reg.join(id, stub("joiner")).unwrap();
+
+        let slot = reg.receiver_slot_for(id, ep1).unwrap();
+
+        let slot_for_task = slot.clone();
+        let task = tokio::spawn(async move {
+            let mut guard = slot_for_task.lock().await;
+            let _ = guard.recv().await;
+        });
+
+        tokio::time::sleep(Duration::from_millis(10)).await;
+        task.abort();
+        let _ = task.await;
+
+        // Peer sends; ep1 must still be able to receive (receiver not lost on cancel).
+        reg.sender_for(id, ep2).unwrap().try_send(json!("hello")).unwrap();
+
+        let got = tokio::time::timeout(Duration::from_millis(100), async {
+            slot.lock().await.recv().await
+        })
+        .await
+        .expect("recv timed out — receiver was lost on cancel");
+        assert_eq!(got, Some(json!("hello")));
     }
 
     #[tokio::test]
@@ -178,17 +207,13 @@ mod tests {
         let (id, ep) = reg.create(1024, stub("creator"));
         let slot = reg.receiver_slot_for(id, ep).unwrap();
 
-        let mut guard = slot.lock().await;
-        let mut rx = guard.take().unwrap();
-        drop(guard);
-
         let reg2 = reg.clone();
         tokio::spawn(async move {
             tokio::time::sleep(Duration::from_millis(1)).await;
             reg2.close(id).unwrap();
         });
 
-        assert!(rx.recv().await.is_none());
+        assert!(slot.lock().await.recv().await.is_none());
     }
 
     #[tokio::test]

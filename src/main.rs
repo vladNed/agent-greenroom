@@ -34,11 +34,12 @@ async fn main() -> Result<()> {
 
     tracing::info!("listening on {}", config.bind_addr);
 
-    axum::serve(listener, router)
-        .with_graceful_shutdown(async {
-            tokio::signal::ctrl_c().await.ok();
-        })
-        .await?;
+    tokio::select! {
+        res = axum::serve(listener, router) => res?,
+        _ = tokio::signal::ctrl_c() => {
+            tracing::info!("ctrl-c received, shutting down");
+        }
+    }
 
     Ok(())
 }

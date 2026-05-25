@@ -7,7 +7,7 @@ use super::{ChannelError, AgentIdentity};
 
 pub type Sender = mpsc::Sender<Value>;
 pub type Receiver = mpsc::Receiver<Value>;
-pub type ReceiverSlot = Arc<tokio::sync::Mutex<Option<Receiver>>>;
+pub type ReceiverSlot = Arc<tokio::sync::Mutex<Receiver>>;
 
 pub struct Mailbox {
     tx: Sender,
@@ -35,14 +35,14 @@ impl Channel {
             endpoint1,
             Mailbox {
                 tx: tx_1to2,
-                rx: Arc::new(Mutex::new(Some(rx_2to1))),
+                rx: Arc::new(Mutex::new(rx_2to1)),
             },
         );
         mailboxes.insert(
             endpoint2,
             Mailbox {
                 tx: tx_2to1,
-                rx: Arc::new(Mutex::new(Some(rx_1to2))),
+                rx: Arc::new(Mutex::new(rx_1to2)),
             },
         );
 

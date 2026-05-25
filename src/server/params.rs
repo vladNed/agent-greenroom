@@ -27,6 +27,14 @@ pub struct ChannelEndpointParams {
 }
 
 #[derive(Deserialize, schemars::JsonSchema)]
+pub struct RecvParams {
+    pub channel_id: String,
+    pub endpoint_id: String,
+    #[serde(default)]
+    pub wait_ms: Option<u64>,
+}
+
+#[derive(Deserialize, schemars::JsonSchema)]
 pub struct ChannelJoinParams {
     pub channel_id: String,
     pub name: String,

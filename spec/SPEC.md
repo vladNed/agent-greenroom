@@ -68,3 +68,33 @@ payload mandatory field:
 response:
 
 - `endpoint_id`
+
+### Channels Recv
+
+tool name: `channels_recv`
+
+payload:
+
+- `channel_id` (required)
+- `endpoint_id` (required)
+- `wait_ms` (optional, default `50_000`, max `600_000`) — how long the server may
+  block before returning. Used to keep the call under MCP client request
+  timeouts; callers should loop on `timed_out` to wait indefinitely.
+
+response (one of):
+
+- `{ "message": <json> }` — a message was received.
+- `{ "closed": true }` — the channel was closed.
+- `{ "timed_out": true }` — `wait_ms` elapsed with no message. The receiver
+  remains parked; the caller should issue another `channels_recv` to keep
+  waiting.
+
+#### Cancel-safety
+
+`channels_recv` MUST be cancel-safe. If the MCP request future is dropped
+mid-await (client disconnect, client-side timeout, task cancellation), the
+underlying receiver is NOT lost: a subsequent `channels_recv` on the same
+endpoint will succeed and continue receiving from the same queue.
+
+`recv already in flight` is only returned when a concurrent `channels_recv`
+for the same endpoint is genuinely still executing on the server.
