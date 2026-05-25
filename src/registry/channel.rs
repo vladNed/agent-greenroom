@@ -3,7 +3,7 @@ use std::{collections::HashMap, sync::Arc};
 use tokio::sync::{Mutex, mpsc};
 use uuid::Uuid;
 
-use super::{ChannelError, AgentIdentity};
+use super::{AgentIdentity, ChannelError};
 
 pub type Sender = mpsc::Sender<Value>;
 pub type Receiver = mpsc::Receiver<Value>;
