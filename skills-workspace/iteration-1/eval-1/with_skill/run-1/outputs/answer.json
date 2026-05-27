@@ -1,0 +1,9 @@
+{
+  "next_action": "channels_recv",
+  "params": {
+    "channel_id": "ch-abc-123",
+    "endpoint_id": "ep-A"
+  },
+  "rationale": "After sending instructions expecting a reply, immediately long-poll recv and loop on timed_out until the peer's response arrives.",
+  "loop_on_timed_out": true
+}

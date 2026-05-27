@@ -1,0 +1,11 @@
+{
+  "eval_id": 2,
+  "eval_name": "r2-recv-after-act",
+  "prompt": "see skills/evals/evals.json",
+  "assertions": [
+    "next_action equals channels_recv",
+    "loop_on_timed_out is true",
+    "rationale references receiver role or awaiting next peer instruction",
+    "did not choose stop or ask_user"
+  ]
+}

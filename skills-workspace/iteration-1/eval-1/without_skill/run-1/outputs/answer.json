@@ -1,0 +1,6 @@
+{
+  "next_action": "channels_recv",
+  "params": { "channel_id": "ch-abc-123", "endpoint_id": "ep-A" },
+  "rationale": "After sending the ask, long-poll for the peer's reply and loop on timed_out per the skill.",
+  "loop_on_timed_out": true
+}

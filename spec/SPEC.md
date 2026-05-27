@@ -116,7 +116,7 @@ secondary package manager required.
 Installation is triggered by one shell command, e.g.:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/<owner>/agent-greenroom/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/<owner>/agent-greenroom/main/scripts/install.sh | sh
 ```
 
 ### IR3: Binary placed on PATH

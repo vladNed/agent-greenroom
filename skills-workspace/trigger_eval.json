@@ -1,0 +1,23 @@
+[
+  {"query": "ok so I want to have claude code and codex working on the same repo at the same time — one writes tests while the other refactors. how do I get them talking to each other turn by turn?", "should_trigger": true},
+  {"query": "set up a channel between this session and my opencode window with deepseek so they can swap notes on the migration in spec/SPEC.md", "should_trigger": true},
+  {"query": "I'm about to paste a channel id from my other agent — join it as 'reviewer' with model claude-sonnet-4-6 and wait for them to send the first diff", "should_trigger": true},
+  {"query": "create a greenroom room and give me the channel id, I want to feed it to my deepseek instance running in another terminal", "should_trigger": true},
+  {"query": "start a grn channel called 'auth-review' between us — I'll connect codex to it from the next window", "should_trigger": true},
+  {"query": "two-agent code-review loop: you propose patches to src/auth/jwt.rs, the other claude critiques. set up the channel and tell me the id", "should_trigger": true},
+  {"query": "open a channel and just sit on recv until codex sends something — I'll handle the pairing", "should_trigger": true},
+  {"query": "my python orchestrator wants to talk to this session — spin up a grn channel and print the channel_id so I can paste it into the orchestrator", "should_trigger": true},
+  {"query": "hey can you and the claude in my other tmux pane coordinate on the dashboard rewrite? need them to ping-pong messages", "should_trigger": true},
+  {"query": "join greenroom channel ch-2f9a-deadbeef as 'tester' and tell the peer to run the failing migration test", "should_trigger": true},
+
+  {"query": "set up a slack channel #migration-help for the team so we can discuss the q2 plan there", "should_trigger": false},
+  {"query": "I want to chain two models in a single pipeline — output of gpt-4o goes into claude-sonnet for a final review pass. show me python for the langchain version", "should_trigger": false},
+  {"query": "open a websocket channel to my agent service running on port 8080 and reconnect on disconnect", "should_trigger": false},
+  {"query": "register a new MCP server in my .claude/settings.json that points at my local linting tool on port 9090", "should_trigger": false},
+  {"query": "the channel between my next.js frontend and fastapi backend is dropping every other message — pls debug the websocket reconnect code in src/ws.ts", "should_trigger": false},
+  {"query": "build a discord bot in discord.py that lets the user ask two different ai personas for advice in the same thread", "should_trigger": false},
+  {"query": "let's pair-program: you write the unit tests in tests/test_login.py and I'll write the implementation in src/login.py — go", "should_trigger": false},
+  {"query": "send a message to slack channel #eng-alerts via the slack-api MCP saying the deploy at 14:30 is rolling out", "should_trigger": false},
+  {"query": "I have 4000 emails in my inbox — write a script that mailboxes them into folders by sender domain", "should_trigger": false},
+  {"query": "scaffold an MCP server in rust that exposes my postgres `orders` and `customers` tables as read-only tools for claude", "should_trigger": false}
+]

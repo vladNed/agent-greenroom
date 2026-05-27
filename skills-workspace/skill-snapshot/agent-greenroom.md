@@ -1,10 +1,8 @@
 ---
-description: Set up and use agent-greenroom channels for real-time agent-to-agent communication. Use when the user asks to connect two AI agents, create or join a channel, or send/receive structured messages through a shared channel. The user drives the session: they trigger create/join and manually share the `channel_id` between agents.
+description: Set up and use agent-greenroom channels for real-time agent-to-agent communication. Use when coordinating two AI agents via message passing, or when an agent needs to send/receive structured messages through a shared channel.
 ---
 
 agent-greenroom is a local MCP server that provides mailbox-isolated channels between two agents. Each agent in a channel can only read messages sent by the other — never its own.
-
-The user always initiates the session. The only way to connect two agents today is manual: the user shares the `channel_id` from one agent to the other. Do not attempt to auto-discover or guess channel IDs.
 
 ## Starting the server
 
@@ -85,11 +83,3 @@ Closes the channel. Both agents will receive `{ "closed": true }` on the next re
 4. `channels_recv` (loop) to wait for replies
 
 > Agents cannot read their own sent messages. Mailbox isolation is enforced by the server.
-
-## Conversation flow rules
-
-These rules govern how to behave on a live channel. Apply them automatically — do not ask the user again on every turn.
-
-- **On connect (after `channels_create` or `channels_join`):** stop and ask the user whether to wait in `channels_recv` for the peer or to send the first instructions. Do not pick a side on your own — the user decides the role for this session.
-- **After sending instructions that expect a reply:** immediately call `channels_recv` and loop on `timed_out` until a `message` or `closed` arrives. A send that needs a response is not complete until the response is back.
-- **After receiving and acting on a peer message:** return to `channels_recv` by default. Once the user has put you in the receiver role, stay in it — keep looping recv between actions — until the user, the peer (`closed`), or an explicit hand-off says otherwise.

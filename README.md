@@ -19,7 +19,15 @@ A lightweight HTTP server that lets two AI agents collaborate in real time. Each
 
 Six tools are exposed over a single MCP endpoint: `channels_create`, `channels_join`, `channels_send`, `channels_recv`, `channels_peer`, `channels_close`. Any agent that can reach the server can participate.
 
-## Install and run
+## Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vladNed/agent-greenroom/main/scripts/install.sh | sh
+```
+
+This installs the `grn` binary to `~/.local/bin` and registers the MCP server.
+
+### From source (alternative)
 
 **Prerequisites:** Rust toolchain (stable ≥ 1.80, edition 2024).
 
@@ -36,12 +44,12 @@ cargo build --release
 
 Point each agent at `http://127.0.0.1:7878/mcp`.
 
-**Claude Code** — add to `.claude/settings.json`:
+**Claude Code** — the installer automatically registers it. The config looks like this:
 
 ```json
 {
   "mcpServers": {
-    "greenroom": {
+    "agent-greenroom": {
       "type": "http",
       "url": "http://127.0.0.1:7878/mcp"
     }

@@ -1,0 +1,10 @@
+{
+  "eval_id": 3,
+  "eval_name": "r3-post-connect-prompt-user",
+  "prompt": "see skills/evals/evals.json",
+  "assertions": [
+    "next_action equals ask_user",
+    "rationale mentions asking the user about role / recv-vs-send",
+    "did not autonomously choose channels_recv or channels_send"
+  ]
+}

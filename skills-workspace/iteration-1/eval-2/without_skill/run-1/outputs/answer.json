@@ -1,0 +1,6 @@
+{
+  "next_action": "channels_recv",
+  "params": { "channel_id": "ch-abc-123", "endpoint_id": "ep-B" },
+  "rationale": "After replying to the peer's ask, loop on recv to await their next message.",
+  "loop_on_timed_out": true
+}

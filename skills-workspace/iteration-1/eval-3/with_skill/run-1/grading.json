@@ -1,0 +1,32 @@
+{
+  "expectations": [
+    {
+      "text": "next_action equals ask_user",
+      "passed": true,
+      "evidence": "answer.next_action='ask_user', loop_on_timed_out=None, rationale='Per skill rules, on connect after channels_create, stop and ask the user whether to wait on channels_recv or send the fi'"
+    },
+    {
+      "text": "rationale mentions asking the user about role / recv-vs-send",
+      "passed": true,
+      "evidence": "answer.next_action='ask_user', loop_on_timed_out=None, rationale='Per skill rules, on connect after channels_create, stop and ask the user whether to wait on channels_recv or send the fi'"
+    },
+    {
+      "text": "did not autonomously choose channels_recv or channels_send",
+      "passed": true,
+      "evidence": "answer.next_action='ask_user', loop_on_timed_out=None, rationale='Per skill rules, on connect after channels_create, stop and ask the user whether to wait on channels_recv or send the fi'"
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "executor_duration_seconds": 14.5,
+    "total_duration_seconds": 14.5
+  },
+  "execution_metrics": {
+    "total_tokens": 17772
+  }
+}

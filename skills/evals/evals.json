@@ -1,0 +1,43 @@
+{
+  "skill_name": "agent-greenroom",
+  "evals": [
+    {
+      "id": 1,
+      "name": "r1-send-then-recv",
+      "prompt": "You are Claude Code with the agent-greenroom skill loaded. Read the skill at the provided path, then act.\n\nCurrent session state:\n- You have a live greenroom channel: channel_id='ch-abc-123', endpoint_id='ep-A' (you are agent A).\n- The user said one turn ago: \"Ask the peer to summarize src/auth.rs in three sentences.\"\n- You called `channels_send` with message: { \"ask\": \"Please summarize src/auth.rs in three sentences and reply.\" }\n- The send returned { \"ok\": true }.\n- You have not received any message from the peer yet.\n- The user is silent and is waiting.\n\nDecide your NEXT single action. Do not call any MCP tool — instead, write a file at the path provided to you containing exactly this JSON shape:\n\n{\n  \"next_action\": \"<one of: channels_recv | channels_send | ask_user | stop | other>\",\n  \"params\": { ... },\n  \"rationale\": \"<one short sentence explaining why>\",\n  \"loop_on_timed_out\": <true | false | null>\n}\n\nThen write nothing else. The file should be valid JSON and only the JSON.",
+      "expected_output": "next_action = channels_recv, loop_on_timed_out = true, rationale references waiting for the peer's reply after a send that expects a response (R1).",
+      "files": [],
+      "assertions": [
+        "Response chooses next_action = channels_recv",
+        "Response sets loop_on_timed_out = true",
+        "Rationale references waiting for the peer reply or send-then-wait pattern",
+        "Response does not choose stop or ask_user"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "r2-recv-after-act",
+      "prompt": "You are Claude Code with the agent-greenroom skill loaded. Read the skill at the provided path, then act.\n\nCurrent session state:\n- You have a live greenroom channel: channel_id='ch-abc-123', endpoint_id='ep-B' (you are agent B, the responder).\n- The user originally said: \"Join channel ch-abc-123 and help the peer.\"\n- One turn ago, the peer sent you: { \"ask\": \"List all .rs files under src/auth/.\" }\n- You ran the search and found 4 files: mod.rs, jwt.rs, middleware.rs, types.rs.\n- You just called `channels_send` with: { \"files\": [\"mod.rs\", \"jwt.rs\", \"middleware.rs\", \"types.rs\"] }.\n- The send returned { \"ok\": true }.\n- The user has not spoken again — they are watching the conversation.\n\nDecide your NEXT single action. Do not call any MCP tool — instead, write a file at the path provided to you containing exactly this JSON shape:\n\n{\n  \"next_action\": \"<one of: channels_recv | channels_send | ask_user | stop | other>\",\n  \"params\": { ... },\n  \"rationale\": \"<one short sentence explaining why>\",\n  \"loop_on_timed_out\": <true | false | null>\n}\n\nThen write nothing else. The file should be valid JSON and only the JSON.",
+      "expected_output": "next_action = channels_recv (the responder stays in the receiver role and waits for the next instruction from the peer — R2).",
+      "files": [],
+      "assertions": [
+        "Response chooses next_action = channels_recv",
+        "Response sets loop_on_timed_out = true",
+        "Rationale references staying in the receiver role or waiting for the next peer instruction",
+        "Response does not choose stop or ask_user"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "r3-post-connect-prompt-user",
+      "prompt": "You are Claude Code with the agent-greenroom skill loaded. Read the skill at the provided path, then act.\n\nCurrent session state:\n- The user said one turn ago: \"Create a greenroom channel — I'll paste the channel_id into my Codex window.\"\n- You called `channels_create` and got back: { \"channel_id\": \"ch-xyz-999\", \"endpoint_id\": \"ep-A\" }.\n- You printed the channel_id back to the user.\n- The user has not yet given any further instruction. No peer message has arrived.\n\nDecide your NEXT single action. Do not call any MCP tool — instead, write a file at the path provided to you containing exactly this JSON shape:\n\n{\n  \"next_action\": \"<one of: channels_recv | channels_send | ask_user | stop | other>\",\n  \"params\": { ... },\n  \"rationale\": \"<one short sentence explaining why>\",\n  \"loop_on_timed_out\": <true | false | null>\n}\n\nThen write nothing else. The file should be valid JSON and only the JSON.",
+      "expected_output": "next_action = ask_user — model asks the user whether to wait in recv for the peer or to send the first instructions. Does NOT autonomously pick recv or send (R3).",
+      "files": [],
+      "assertions": [
+        "Response chooses next_action = ask_user",
+        "Rationale references asking the user whether to wait in recv or send first, or otherwise letting the user decide the role",
+        "Response does not autonomously choose channels_recv or channels_send"
+      ]
+    }
+  ]
+}

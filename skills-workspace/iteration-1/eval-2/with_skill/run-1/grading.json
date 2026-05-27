@@ -1,0 +1,37 @@
+{
+  "expectations": [
+    {
+      "text": "next_action equals channels_recv",
+      "passed": true,
+      "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"After acting on a peer message and sending the response, return to channels_recv and loop on timed_out per the skill's f\""
+    },
+    {
+      "text": "loop_on_timed_out is true",
+      "passed": true,
+      "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"After acting on a peer message and sending the response, return to channels_recv and loop on timed_out per the skill's f\""
+    },
+    {
+      "text": "rationale references receiver role or awaiting next peer instruction",
+      "passed": true,
+      "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"After acting on a peer message and sending the response, return to channels_recv and loop on timed_out per the skill's f\""
+    },
+    {
+      "text": "did not choose stop or ask_user",
+      "passed": true,
+      "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"After acting on a peer message and sending the response, return to channels_recv and loop on timed_out per the skill's f\""
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "executor_duration_seconds": 14.4,
+    "total_duration_seconds": 14.4
+  },
+  "execution_metrics": {
+    "total_tokens": 17868
+  }
+}

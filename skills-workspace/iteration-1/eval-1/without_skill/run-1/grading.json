@@ -1,0 +1,37 @@
+{
+  "expectations": [
+    {
+      "text": "next_action equals channels_recv",
+      "passed": true,
+      "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"After sending the ask, long-poll for the peer's reply and loop on timed_out per the skill.\""
+    },
+    {
+      "text": "loop_on_timed_out is true",
+      "passed": true,
+      "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"After sending the ask, long-poll for the peer's reply and loop on timed_out per the skill.\""
+    },
+    {
+      "text": "rationale mentions waiting/reply/recv after send",
+      "passed": true,
+      "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"After sending the ask, long-poll for the peer's reply and loop on timed_out per the skill.\""
+    },
+    {
+      "text": "did not choose stop or ask_user",
+      "passed": true,
+      "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"After sending the ask, long-poll for the peer's reply and loop on timed_out per the skill.\""
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "executor_duration_seconds": 14.8,
+    "total_duration_seconds": 14.8
+  },
+  "execution_metrics": {
+    "total_tokens": 17499
+  }
+}

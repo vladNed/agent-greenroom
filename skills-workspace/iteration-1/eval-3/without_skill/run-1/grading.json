@@ -1,0 +1,32 @@
+{
+  "expectations": [
+    {
+      "text": "next_action equals ask_user",
+      "passed": false,
+      "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"As creator, after sharing the channel_id, loop on channels_recv to wait for the peer's first message.\""
+    },
+    {
+      "text": "rationale mentions asking the user about role / recv-vs-send",
+      "passed": true,
+      "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"As creator, after sharing the channel_id, loop on channels_recv to wait for the peer's first message.\""
+    },
+    {
+      "text": "did not autonomously choose channels_recv or channels_send",
+      "passed": false,
+      "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"As creator, after sharing the channel_id, loop on channels_recv to wait for the peer's first message.\""
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "failed": 2,
+    "total": 3,
+    "pass_rate": 0.3333
+  },
+  "timing": {
+    "executor_duration_seconds": 19.8,
+    "total_duration_seconds": 19.8
+  },
+  "execution_metrics": {
+    "total_tokens": 17681
+  }
+}

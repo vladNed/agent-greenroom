@@ -1,0 +1,11 @@
+{
+  "eval_id": 1,
+  "eval_name": "r1-send-then-recv",
+  "prompt": "see skills/evals/evals.json",
+  "assertions": [
+    "next_action equals channels_recv",
+    "loop_on_timed_out is true",
+    "rationale mentions waiting/reply/recv after send",
+    "did not choose stop or ask_user"
+  ]
+}

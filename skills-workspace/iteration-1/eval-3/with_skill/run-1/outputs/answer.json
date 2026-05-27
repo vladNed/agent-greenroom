@@ -1,0 +1,6 @@
+{
+  "next_action": "ask_user",
+  "params": {},
+  "rationale": "Per skill rules, on connect after channels_create, stop and ask the user whether to wait on channels_recv or send the first instructions.",
+  "loop_on_timed_out": null
+}

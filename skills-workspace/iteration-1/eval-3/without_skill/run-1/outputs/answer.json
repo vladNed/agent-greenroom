@@ -1,0 +1,6 @@
+{
+  "next_action": "channels_recv",
+  "params": { "channel_id": "ch-xyz-999", "endpoint_id": "ep-A" },
+  "rationale": "As creator, after sharing the channel_id, loop on channels_recv to wait for the peer's first message.",
+  "loop_on_timed_out": true
+}

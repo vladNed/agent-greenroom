@@ -1,0 +1,288 @@
+{
+  "metadata": {
+    "skill_name": "agent-greenroom",
+    "skill_path": "<path/to/skill>",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-05-27T18:12:20Z",
+    "evals_run": [
+      1,
+      2,
+      3
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 14.3,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "next_action equals channels_recv",
+          "passed": true,
+          "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"After sending instructions expecting a reply, immediately long-poll recv and loop on timed_out until the peer's response\""
+        },
+        {
+          "text": "loop_on_timed_out is true",
+          "passed": true,
+          "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"After sending instructions expecting a reply, immediately long-poll recv and loop on timed_out until the peer's response\""
+        },
+        {
+          "text": "rationale mentions waiting/reply/recv after send",
+          "passed": true,
+          "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"After sending instructions expecting a reply, immediately long-poll recv and loop on timed_out until the peer's response\""
+        },
+        {
+          "text": "did not choose stop or ask_user",
+          "passed": true,
+          "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"After sending instructions expecting a reply, immediately long-poll recv and loop on timed_out until the peer's response\""
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 14.4,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "next_action equals channels_recv",
+          "passed": true,
+          "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"After acting on a peer message and sending the response, return to channels_recv and loop on timed_out per the skill's f\""
+        },
+        {
+          "text": "loop_on_timed_out is true",
+          "passed": true,
+          "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"After acting on a peer message and sending the response, return to channels_recv and loop on timed_out per the skill's f\""
+        },
+        {
+          "text": "rationale references receiver role or awaiting next peer instruction",
+          "passed": true,
+          "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"After acting on a peer message and sending the response, return to channels_recv and loop on timed_out per the skill's f\""
+        },
+        {
+          "text": "did not choose stop or ask_user",
+          "passed": true,
+          "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"After acting on a peer message and sending the response, return to channels_recv and loop on timed_out per the skill's f\""
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 14.5,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "next_action equals ask_user",
+          "passed": true,
+          "evidence": "answer.next_action='ask_user', loop_on_timed_out=None, rationale='Per skill rules, on connect after channels_create, stop and ask the user whether to wait on channels_recv or send the fi'"
+        },
+        {
+          "text": "rationale mentions asking the user about role / recv-vs-send",
+          "passed": true,
+          "evidence": "answer.next_action='ask_user', loop_on_timed_out=None, rationale='Per skill rules, on connect after channels_create, stop and ask the user whether to wait on channels_recv or send the fi'"
+        },
+        {
+          "text": "did not autonomously choose channels_recv or channels_send",
+          "passed": true,
+          "evidence": "answer.next_action='ask_user', loop_on_timed_out=None, rationale='Per skill rules, on connect after channels_create, stop and ask the user whether to wait on channels_recv or send the fi'"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 14.8,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "next_action equals channels_recv",
+          "passed": true,
+          "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"After sending the ask, long-poll for the peer's reply and loop on timed_out per the skill.\""
+        },
+        {
+          "text": "loop_on_timed_out is true",
+          "passed": true,
+          "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"After sending the ask, long-poll for the peer's reply and loop on timed_out per the skill.\""
+        },
+        {
+          "text": "rationale mentions waiting/reply/recv after send",
+          "passed": true,
+          "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"After sending the ask, long-poll for the peer's reply and loop on timed_out per the skill.\""
+        },
+        {
+          "text": "did not choose stop or ask_user",
+          "passed": true,
+          "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"After sending the ask, long-poll for the peer's reply and loop on timed_out per the skill.\""
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 10.8,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "next_action equals channels_recv",
+          "passed": true,
+          "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"After replying to the peer's ask, loop on recv to await their next message.\""
+        },
+        {
+          "text": "loop_on_timed_out is true",
+          "passed": true,
+          "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"After replying to the peer's ask, loop on recv to await their next message.\""
+        },
+        {
+          "text": "rationale references receiver role or awaiting next peer instruction",
+          "passed": true,
+          "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"After replying to the peer's ask, loop on recv to await their next message.\""
+        },
+        {
+          "text": "did not choose stop or ask_user",
+          "passed": true,
+          "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"After replying to the peer's ask, loop on recv to await their next message.\""
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.3333,
+        "passed": 1,
+        "failed": 2,
+        "total": 3,
+        "time_seconds": 19.8,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "next_action equals ask_user",
+          "passed": false,
+          "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"As creator, after sharing the channel_id, loop on channels_recv to wait for the peer's first message.\""
+        },
+        {
+          "text": "rationale mentions asking the user about role / recv-vs-send",
+          "passed": true,
+          "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"As creator, after sharing the channel_id, loop on channels_recv to wait for the peer's first message.\""
+        },
+        {
+          "text": "did not autonomously choose channels_recv or channels_send",
+          "passed": false,
+          "evidence": "answer.next_action='channels_recv', loop_on_timed_out=True, rationale=\"As creator, after sharing the channel_id, loop on channels_recv to wait for the peer's first message.\""
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 14.4,
+        "stddev": 0.1,
+        "min": 14.3,
+        "max": 14.5
+      },
+      "tokens": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.7778,
+        "stddev": 0.3849,
+        "min": 0.3333,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 15.1333,
+        "stddev": 4.5092,
+        "min": 10.8,
+        "max": 19.8
+      },
+      "tokens": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.22",
+      "time_seconds": "-0.7",
+      "tokens": "+0"
+    }
+  },
+  "notes": [
+    "R3 (post-connect prompt) is the discriminating eval: baseline scored 1/3 because the original workflow text told the creator to immediately loop on channels_recv, overriding any user-decides-the-role behavior. The new explicit rule fixes this.",
+    "R1 (send-then-recv) and R2 (recv-after-act) both pass in both configs. The skill's original workflow steps (\"channels_recv (loop) to wait\") already implicitly encoded these patterns \u2014 the new explicit rules reinforce them but do not change behavior in this scenario.",
+    "Recommendation: keep R1/R2 rules as they make the implicit explicit and protect against future workflow rewrites; iterate on R3 wording if any production miss occurs.",
+    "Single-run evals so stddev is noisy. The 78% \u00b1 38% on baseline reflects pass/fail on the single discriminating case across 3 evals, not within-eval variance."
+  ]
+}
