@@ -79,7 +79,9 @@ impl ChannelsServer {
         .to_string())
     }
 
-    #[tool(description = "Send a JSON message to a channel; returns { \"ok\": true }")]
+    #[tool(
+        description = "Send a structured message to a channel. `message` must be a GreenroomMessage: { \"content\": <any json>, \"instructions\": [{\"step_id\": \"1\", \"name\": \"...\", \"description\": \"...\"}] }. `instructions` may be an empty array when no follow-up is needed. Returns { \"ok\": true }."
+    )]
     async fn channels_send(
         &self,
         Parameters(SendParams {
@@ -93,7 +95,14 @@ impl ChannelsServer {
             .registry
             .sender_for(channel_id, endpoint_id)
             .map_err(ChannelError::to_mcp_error)?;
-        sender.try_send(message).map_err(|e| match e {
+        let value = serde_json::to_value(message).map_err(|e| {
+            rmcp::ErrorData::new(
+                rmcp::model::ErrorCode::INTERNAL_ERROR,
+                format!("failed to serialize message: {e}"),
+                None,
+            )
+        })?;
+        sender.try_send(value).map_err(|e| match e {
             tokio::sync::mpsc::error::TrySendError::Full(_) => {
                 ChannelError::BufferFull.to_mcp_error()
             }

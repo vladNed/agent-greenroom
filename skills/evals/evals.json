@@ -4,7 +4,7 @@
     {
       "id": 1,
       "name": "r1-send-then-recv",
-      "prompt": "You are Claude Code with the agent-greenroom skill loaded. Read the skill at the provided path, then act.\n\nCurrent session state:\n- You have a live greenroom channel: channel_id='ch-abc-123', endpoint_id='ep-A' (you are agent A).\n- The user said one turn ago: \"Ask the peer to summarize src/auth.rs in three sentences.\"\n- You called `channels_send` with message: { \"ask\": \"Please summarize src/auth.rs in three sentences and reply.\" }\n- The send returned { \"ok\": true }.\n- You have not received any message from the peer yet.\n- The user is silent and is waiting.\n\nDecide your NEXT single action. Do not call any MCP tool — instead, write a file at the path provided to you containing exactly this JSON shape:\n\n{\n  \"next_action\": \"<one of: channels_recv | channels_send | ask_user | stop | other>\",\n  \"params\": { ... },\n  \"rationale\": \"<one short sentence explaining why>\",\n  \"loop_on_timed_out\": <true | false | null>\n}\n\nThen write nothing else. The file should be valid JSON and only the JSON.",
+      "prompt": "You are Claude Code with the agent-greenroom skill loaded. Read the skill at the provided path, then act.\n\nCurrent session state:\n- You have a live greenroom channel: channel_id='ch-abc-123', endpoint_id='ep-A' (you are agent A).\n- The user said one turn ago: \"Ask the peer to summarize src/auth.rs in three sentences.\"\n- You called `channels_send` with message: { \"content\": { \"ask\": \"Please summarize src/auth.rs in three sentences and reply.\" }, \"instructions\": [{\"step_id\": \"1\", \"name\": \"summarize\", \"description\": \"Summarize src/auth.rs in three sentences.\"}, {\"step_id\": \"2\", \"name\": \"reply\", \"description\": \"Send the summary back via channels_send.\"}, {\"step_id\": \"3\", \"name\": \"recv\", \"description\": \"Then call channels_recv to await the next instruction.\"}] }\n- The send returned { \"ok\": true }.\n- You have not received any message from the peer yet.\n- The user is silent and is waiting.\n\nDecide your NEXT single action. Do not call any MCP tool — instead, write a file at the path provided to you containing exactly this JSON shape:\n\n{\n  \"next_action\": \"<one of: channels_recv | channels_send | ask_user | stop | other>\",\n  \"params\": { ... },\n  \"rationale\": \"<one short sentence explaining why>\",\n  \"loop_on_timed_out\": <true | false | null>\n}\n\nThen write nothing else. The file should be valid JSON and only the JSON.",
       "expected_output": "next_action = channels_recv, loop_on_timed_out = true, rationale references waiting for the peer's reply after a send that expects a response (R1).",
       "files": [],
       "assertions": [
@@ -17,7 +17,7 @@
     {
       "id": 2,
       "name": "r2-recv-after-act",
-      "prompt": "You are Claude Code with the agent-greenroom skill loaded. Read the skill at the provided path, then act.\n\nCurrent session state:\n- You have a live greenroom channel: channel_id='ch-abc-123', endpoint_id='ep-B' (you are agent B, the responder).\n- The user originally said: \"Join channel ch-abc-123 and help the peer.\"\n- One turn ago, the peer sent you: { \"ask\": \"List all .rs files under src/auth/.\" }\n- You ran the search and found 4 files: mod.rs, jwt.rs, middleware.rs, types.rs.\n- You just called `channels_send` with: { \"files\": [\"mod.rs\", \"jwt.rs\", \"middleware.rs\", \"types.rs\"] }.\n- The send returned { \"ok\": true }.\n- The user has not spoken again — they are watching the conversation.\n\nDecide your NEXT single action. Do not call any MCP tool — instead, write a file at the path provided to you containing exactly this JSON shape:\n\n{\n  \"next_action\": \"<one of: channels_recv | channels_send | ask_user | stop | other>\",\n  \"params\": { ... },\n  \"rationale\": \"<one short sentence explaining why>\",\n  \"loop_on_timed_out\": <true | false | null>\n}\n\nThen write nothing else. The file should be valid JSON and only the JSON.",
+      "prompt": "You are Claude Code with the agent-greenroom skill loaded. Read the skill at the provided path, then act.\n\nCurrent session state:\n- You have a live greenroom channel: channel_id='ch-abc-123', endpoint_id='ep-B' (you are agent B, the responder).\n- The user originally said: \"Join channel ch-abc-123 and help the peer.\"\n- One turn ago, the peer sent you: { \"content\": { \"ask\": \"List all .rs files under src/auth/.\" }, \"instructions\": [{\"step_id\": \"1\", \"name\": \"list\", \"description\": \"List all .rs files under src/auth/.\"}, {\"step_id\": \"2\", \"name\": \"reply\", \"description\": \"Send the list back via channels_send.\"}, {\"step_id\": \"3\", \"name\": \"recv\", \"description\": \"Then call channels_recv to await the next instruction.\"}] }\n- You ran the search and found 4 files: mod.rs, jwt.rs, middleware.rs, types.rs.\n- You just called `channels_send` with: { \"content\": { \"files\": [\"mod.rs\", \"jwt.rs\", \"middleware.rs\", \"types.rs\"] }, \"instructions\": [{\"step_id\": \"1\", \"name\": \"recv\", \"description\": \"Call channels_recv to await the next instruction.\"}] }\n- The send returned { \"ok\": true }.\n- The user has not spoken again — they are watching the conversation.\n\nDecide your NEXT single action. Do not call any MCP tool — instead, write a file at the path provided to you containing exactly this JSON shape:\n\n{\n  \"next_action\": \"<one of: channels_recv | channels_send | ask_user | stop | other>\",\n  \"params\": { ... },\n  \"rationale\": \"<one short sentence explaining why>\",\n  \"loop_on_timed_out\": <true | false | null>\n}\n\nThen write nothing else. The file should be valid JSON and only the JSON.",
       "expected_output": "next_action = channels_recv (the responder stays in the receiver role and waits for the next instruction from the peer — R2).",
       "files": [],
       "assertions": [
@@ -37,6 +37,47 @@
         "Response chooses next_action = ask_user",
         "Rationale references asking the user whether to wait in recv or send first, or otherwise letting the user decide the role",
         "Response does not autonomously choose channels_recv or channels_send"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "ac1-simple-request-instructions",
+      "prompt": "You are Claude Code with the agent-greenroom skill loaded. Read the skill at the provided path, then act.\n\nCurrent session state:\n- You have a live greenroom channel: channel_id='ch-abc-123', endpoint_id='ep-A' (you are agent A).\n- The user said: \"Ask the peer to write a haiku about autumn, then receive the result.\"\n- You have not sent anything yet.\n\nYou are about to call `channels_send`. Write a file at the path provided to you containing exactly this JSON shape (your proposed channels_send message argument):\n\n{\n  \"message\": {\n    \"content\": <your content>,\n    \"instructions\": <your instructions array>\n  },\n  \"rationale\": \"<one short sentence explaining why instructions are shaped this way>\"\n}\n\nThen write nothing else. The file should be valid JSON and only the JSON.",
+      "expected_output": "message.instructions contains at least 2 steps: one to create/write the haiku and one to send the result back. A third step to then call channels_recv is also expected. The agent does not ask the user for further input.",
+      "files": [],
+      "assertions": [
+        "message.instructions is a non-empty array",
+        "At least one instruction tells the peer to create or write the haiku",
+        "At least one instruction tells the peer to send the result back via channels_send",
+        "At least one instruction tells the peer to call channels_recv after replying",
+        "Rationale explains why instructions guide autonomous peer behavior"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "ac2-medium-follow-instructions-autonomously",
+      "prompt": "You are Claude Code with the agent-greenroom skill loaded. Read the skill at the provided path, then act.\n\nCurrent session state:\n- You have a live greenroom channel: channel_id='ch-abc-123', endpoint_id='ep-B' (you are agent B).\n- The user said: \"Join ch-abc-123 and help the peer complete tasks.\"\n- You just received this message from the peer:\n  {\n    \"content\": { \"task\": \"Count words in the string: 'the quick brown fox'\" },\n    \"instructions\": [\n      { \"step_id\": \"1\", \"name\": \"count\", \"description\": \"Count the words in the provided string.\" },\n      { \"step_id\": \"2\", \"name\": \"reply\", \"description\": \"Send the word count back via channels_send with instructions for the sender to call channels_recv.\" },\n      { \"step_id\": \"3\", \"name\": \"recv\", \"description\": \"Call channels_recv to await the next task.\" }\n    ]\n  }\n- The user has not spoken since the initial join instruction.\n\nDecide your NEXT single action WITHOUT asking the user. Write a file at the path provided to you containing exactly this JSON shape:\n\n{\n  \"next_action\": \"<one of: channels_recv | channels_send | ask_user | stop | other>\",\n  \"proposed_message\": {\n    \"content\": <the content you would send>,\n    \"instructions\": <instructions you would include>\n  },\n  \"rationale\": \"<one short sentence>\",\n  \"loop_on_timed_out\": <true | false | null>\n}\n\nThen write nothing else. The file should be valid JSON and only the JSON.",
+      "expected_output": "next_action = channels_send with word count (4) in content, instructions telling the peer to call channels_recv, then next_action implies the agent will call channels_recv itself. Agent does NOT ask the user.",
+      "files": [],
+      "assertions": [
+        "Response chooses next_action = channels_send",
+        "proposed_message.content contains the correct word count (4)",
+        "proposed_message.instructions is non-empty and includes a step for the peer to call channels_recv",
+        "Response does not choose ask_user",
+        "Rationale references following received instructions autonomously"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "ac3-complex-close-when-done",
+      "prompt": "You are Claude Code with the agent-greenroom skill loaded. Read the skill at the provided path, then act.\n\nCurrent session state:\n- You have a live greenroom channel: channel_id='ch-abc-123', endpoint_id='ep-A' (you are agent A, the requester).\n- You have been exchanging messages with agent B through multiple turns.\n- You just received this final message from agent B:\n  {\n    \"content\": { \"result\": \"Task complete. All 5 items processed successfully.\", \"summary\": \"Processed items 1-5.\" },\n    \"instructions\": [\n      { \"step_id\": \"1\", \"name\": \"close\", \"description\": \"Call channels_close — all work is complete.\" }\n    ]\n  }\n- The user's original goal was: \"Process all 5 items and let me know when done.\"\n- The user has not spoken since giving the original goal.\n\nDecide your NEXT single action. Write a file at the path provided to you containing exactly this JSON shape:\n\n{\n  \"next_action\": \"<one of: channels_recv | channels_send | channels_close | ask_user | stop | other>\",\n  \"rationale\": \"<one short sentence>\"\n}\n\nThen write nothing else. The file should be valid JSON and only the JSON.",
+      "expected_output": "next_action = channels_close — agent follows the close instruction from the peer without asking the user, since the goal has been met.",
+      "files": [],
+      "assertions": [
+        "Response chooses next_action = channels_close",
+        "Rationale references following the close instruction from the peer or that the goal is complete",
+        "Response does not choose ask_user",
+        "Response does not choose channels_recv"
       ]
     }
   ]
